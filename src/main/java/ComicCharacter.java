@@ -48,6 +48,8 @@ public class ComicCharacter extends MarvelApi {
         String name = character.getString("name");
 
         String description = character.getString("description");
+
+        //If the character doesnt have a description, use this default.
         if (description.equals("") || description.equals(" ")) {
             description = "This enhanced individual has a mysterious past. Safe bet is that their parent are dead.";
         }
@@ -65,6 +67,7 @@ public class ComicCharacter extends MarvelApi {
     }
 
     protected String nameSearch(String name){
+        //sets up the search URL to be added to the main URL
         String searchUrl = "nameStartsWith=" + name;
         return searchUrl;
     }

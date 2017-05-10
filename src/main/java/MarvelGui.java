@@ -39,6 +39,8 @@ public class MarvelGui extends JFrame{
     private JButton btnNextBatch;
     private JLabel imageLabel;
     private JEditorPane txtInfo2;
+    private JButton btnPrevBatch;
+    private JButton button1;
 
 
     DefaultListModel searchResultsModel;
@@ -54,8 +56,11 @@ public class MarvelGui extends JFrame{
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setVisible(true);
 
+        //txtInfo2 formatted to use HTML since descriptions from Marvel can have HTML in them.
         txtInfo2.setContentType("text/html");
+        rootPanel.getRootPane().setDefaultButton(btnSearch);
 
+        configureButtons();
         configureRadioButtons();
         pack();
 
@@ -63,9 +68,10 @@ public class MarvelGui extends JFrame{
         searchResultsModel = new DefaultListModel();
         lstResults.setModel(searchResultsModel);
 
-        configureButtons();
-
     }
+
+    int startNum = 0;
+    int endNum = 10;
 
     protected void configureButtons(){
         btnSearch.addActionListener(new ActionListener() {
@@ -73,7 +79,10 @@ public class MarvelGui extends JFrame{
                 searchResultsModel.clear();
 
                 String name = txtSearch.getText();
+                startNum = 0;
+                endNum = 10;
 
+                //Checks which radio button is selected and creates a ComicCharacter or a Comic object.
                 if(selectedRdoName.equalsIgnoreCase("characters?")) {
                     hero = new ComicCharacter(selectedRdoName);
                     hero.getKey();
@@ -101,24 +110,12 @@ public class MarvelGui extends JFrame{
                         System.out.println(responseBody);
                         LinkedList info = new LinkedList();
                         try {
-                            if(resultList.size() > 0){
-                                resultList.clear();
-                            }
-                            for(int x = 0 ; x <= 5 ; x++) {
-                                if(selectedRdoName.equalsIgnoreCase("characters?")) {
-                                    info = hero.getInfo(responseBody, x);
-                                }else if(selectedRdoName.equalsIgnoreCase("comics?")) {
-                                    info = comic.getInfo(responseBody, x);
-                                }
-                                searchResultsModel.addElement(info.get(0).toString());
-                                resultList.add(info);
-                            }
 
-                            if(resultList.size() <= 0){
-                                JOptionPane.showMessageDialog(MarvelGui.this,"No results");
-                            }
+
+                            getResults(responseBody, info, startNum, endNum, searchResultsModel, resultList);
+                            startNum+=10;
+
                         }catch(JSException e){
-                            //TODO better exception handling
                             e.printStackTrace();
                         }
 
@@ -133,6 +130,8 @@ public class MarvelGui extends JFrame{
         lstResults.addListSelectionListener(new ListSelectionListener() {
             //replaces get description button
             public void valueChanged(ListSelectionEvent e) {
+                //checks the index of what is selected in the listbox and displays the info into txtInfo2
+
                 int index = 0;
 
                 if(lstResults.isSelectionEmpty() == true){
@@ -141,9 +140,9 @@ public class MarvelGui extends JFrame{
                     String image = null;
                     index = lstResults.getSelectedIndex();
                     LinkedList descrip = resultList.get(index);
-                    //String[] split = descrip.get(1).toString().split(",");
                     String bio = descrip.get(1).toString();
 
+                    //Some descriptions use HTML so have to format in HTML.
                     txtInfo2.setText( "<p><b>" + descrip.get(0).toString() + "</b></p>" + bio);
 
                     if(selectedRdoName.equalsIgnoreCase("characters?")) {
@@ -161,6 +160,77 @@ public class MarvelGui extends JFrame{
 
                     //System.out.println(url);
                 }
+
+            }
+        });
+
+        btnNextBatch.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                endNum +=10;
+
+                AsyncHttpClient asyncHttpClient = new DefaultAsyncHttpClient();
+                asyncHttpClient.prepareGet(apiURL).execute(new AsyncCompletionHandler<Response>() {
+                    @Override
+                    public Response onCompleted(Response response) throws Exception {
+
+                        //response.ResopnseBody() gets the Json data.
+                        //Variable responseBody has the Json data.
+                        String responseBody = response.getResponseBody();
+                        System.out.println(responseBody);
+                        LinkedList info = new LinkedList();
+                        try {
+
+
+                            getResults(responseBody, info, startNum, endNum, searchResultsModel, resultList);
+                            startNum+=10;
+
+
+                        }catch(JSException e){
+                            e.printStackTrace();
+                        }
+
+                        return null;
+                    }
+                });
+
+
+            }
+        });
+
+        btnPrevBatch.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                startNum -= 20;
+                endNum -= 10;
+                if (startNum <=0){
+                    startNum = 0;
+                    endNum = 10;
+                }
+
+
+                AsyncHttpClient asyncHttpClient = new DefaultAsyncHttpClient();
+                asyncHttpClient.prepareGet(apiURL).execute(new AsyncCompletionHandler<Response>() {
+                    @Override
+                    public Response onCompleted(Response response) throws Exception {
+
+                        //response.ResopnseBody() gets the Json data.
+                        //Variable responseBody has the Json data.
+                        String responseBody = response.getResponseBody();
+                        System.out.println(responseBody);
+                        LinkedList info = new LinkedList();
+                        try {
+
+
+                            getResults(responseBody, info, startNum, endNum, searchResultsModel, resultList);
+                            startNum+=10;
+
+
+                        }catch(JSException e){
+                            e.printStackTrace();
+                        }
+
+                        return null;
+                    }
+                });
 
             }
         });
@@ -183,6 +253,25 @@ public class MarvelGui extends JFrame{
         rdoCharacter.addItemListener(listener);
         rdoComic.addItemListener(listener);
 
+    }
+
+    protected void getResults(String responseBody, LinkedList info, int start, int end, DefaultListModel model, LinkedList list){
+        //loops through results to fill list box.
+
+        if(list.size() > 0){
+            list.clear();
+            model.clear();
+        }
+
+        for(start = start ; start <= end ; start++) {
+            if(selectedRdoName.equalsIgnoreCase("characters?")) {
+                info = hero.getInfo(responseBody, start);
+            }else if(selectedRdoName.equalsIgnoreCase("comics?")) {
+                info = comic.getInfo(responseBody, start);
+            }
+            model.addElement(info.get(0).toString());
+            list.add(info);
+        }
     }
 
 

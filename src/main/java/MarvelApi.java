@@ -49,6 +49,7 @@ public class MarvelApi {
     }
 
     protected void getKey(){
+        //constructs the key for the Marvel API
         try {
             BufferedReader keyReader = new BufferedReader(new FileReader("urlKey.txt"));
             String publicKey = keyReader.readLine();
@@ -98,7 +99,7 @@ public class MarvelApi {
 
             InputStream stream = image.openStream();
 
-            String filename = "temp.jpg";   // TODO use unique filenames if you need to store many files
+            String filename = "temp.jpg";
             Path filePath = new File(filename).toPath();
 
             // ... delete the file, if it exists, ignore otherwise ...
@@ -125,6 +126,7 @@ public class MarvelApi {
     }
 
     protected String getImageUrl(String url){
+        //Constructs the image URL
         String imageUrl = url + "/portrait_xlarge.jpg";
         return imageUrl;
 
