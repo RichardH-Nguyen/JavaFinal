@@ -40,7 +40,7 @@ public class MarvelGui extends JFrame{
     private JLabel imageLabel;
     private JEditorPane txtInfo2;
     private JButton btnPrevBatch;
-    private JButton button1;
+    private JButton btnQuit;
 
 
     DefaultListModel searchResultsModel;
@@ -232,6 +232,12 @@ public class MarvelGui extends JFrame{
                     }
                 });
 
+            }
+        });
+
+        btnQuit.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                System.exit(0);
             }
         });
     }
